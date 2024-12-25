@@ -19,7 +19,7 @@ class MongoDBHandler:
     def update(self, collection_name, query, update_data):
         collection = self.db[collection_name]
         result = collection.update_one(query, {"$set": update_data})
-        return result.modified_count
+        return result.modified_count   
 
     def delete(self, collection_name, query):
         collection = self.db[collection_name]

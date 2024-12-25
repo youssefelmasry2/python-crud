@@ -50,8 +50,8 @@ class MongoDBApp:
 
         # Styling for buttons
         style = ttk.Style()
-        style.configure('TButton', background='black', foreground='white', font=('Arial', 12, 'bold'))
-        style.map('TButton', background=[('active', 'gray')])
+        style.configure('TButton', background='black', foreground='black', font=('Arial', 12, 'bold'))
+        style.map('TButton', background=[('active', 'black')])
 
         # Action button
         self.action_button = ttk.Button(root, text="Perform Operation", command=self.perform_operation)
