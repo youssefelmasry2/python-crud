@@ -11,31 +11,56 @@ class MongoDBApp:
         self.root = root
         self.root.title("MongoDB CRUD Operations")
         self.root.geometry("500x600")
+        self.root.configure(bg="#2c3e50")  # Set background to a dark blue color
+
+        # Title
+        ttk.Label(
+            root,
+            text="MongoDB CRUD Operations",
+            font=("Arial", 20, "bold"),
+            foreground="white",
+            background="#2c3e50"
+        ).pack(pady=20)
 
         self.collection_var = tk.StringVar()
         self.operation_var = tk.StringVar()
 
-        # Dropdown for collections
-        ttk.Label(root, text="Select Collection:").pack(pady=5)
-        self.collection_dropdown = ttk.Combobox(
-            root, textvariable=self.collection_var, values=["departments", "professors", "courses", "students"]
+        # Welcome text
+        self.welcome_label = tk.Label(
+            root, text="Welcome to Our Large-Scale DB Project",
+            font=("Arial", 16, "bold"), fg="white", bg="#2c3e50"
         )
-        self.collection_dropdown.pack(pady=5)
+        self.welcome_label.pack(pady=10)
+
+        # Dropdown for collections
+        ttk.Label(root, text="Select Collection:", background="#2c3e50", foreground="white").pack(pady=5)
+        self.collection_dropdown = ttk.Combobox(
+            root, textvariable=self.collection_var,
+            values=["departments", "professors", "courses", "students"]
+        )
+        self.collection_dropdown.pack(pady=5, padx=10)
 
         # Dropdown for operation
-        ttk.Label(root, text="Select Operation:").pack(pady=5)
+        ttk.Label(root, text="Select Operation:", background="#2c3e50", foreground="white").pack(pady=5)
         self.operation_dropdown = ttk.Combobox(
-            root, textvariable=self.operation_var, values=["Create", "Read", "Update", "Delete"]
+            root, textvariable=self.operation_var,
+            values=["Create", "Read", "Update", "Delete"]
         )
-        self.operation_dropdown.pack(pady=5)
+        self.operation_dropdown.pack(pady=5, padx=10)
 
         # Action button
         self.action_button = ttk.Button(root, text="Perform Operation", command=self.perform_operation)
-        self.action_button.pack(pady=10)
+        self.action_button.pack(pady=20, padx=10)
+        self.action_button.configure(style='TButton')
 
         # Text box for input/output
-        self.text_box = tk.Text(root, height=20, width=60)
-        self.text_box.pack(pady=10)
+        self.text_box = tk.Text(root, height=20, width=60, bg="white", fg="black", font=("Arial", 12))
+        self.text_box.pack(pady=10, padx=10)
+
+        # Styling for buttons
+        style = ttk.Style()
+        style.configure('TButton', background='black', foreground='white', font=('Arial', 12, 'bold'))
+        style.map('TButton', background=[('active', 'gray')])
 
     def perform_operation(self):
         collection = self.collection_var.get()
@@ -57,26 +82,29 @@ class MongoDBApp:
             messagebox.showwarning("Operation Error", "Invalid operation selected.")
 
     def create_document(self, collection):
-        # Create dialog for entering document fields
         new_window = tk.Toplevel(self.root)
         new_window.title("Create Document")
+        new_window.configure(bg="#2c3e50")
 
         fields = self.get_fields_by_collection(collection)
         entries = {}
 
         for field in fields:
-            # Skip '_id' since MongoDB will generate it automatically
             if field == "_id":
                 continue
-            ttk.Label(new_window, text=f"{field}:").pack(pady=5)
+            ttk.Label(new_window, text=f"{field}:", background="#2c3e50", foreground="white").pack(pady=5)
             entry = ttk.Entry(new_window)
-            entry.pack(pady=5)
+            entry.pack(pady=5, padx=10)
             entries[field] = entry
 
         def submit():
             document = {field: entry.get() for field, entry in entries.items()}
+
+            if any(not value.strip() for value in document.values()):
+                messagebox.showwarning("Input Error", "All fields are required.")
+                return
+
             try:
-                # Insert the document without the '_id' field to let MongoDB generate it
                 document_id = db_handler.create(collection, document)
                 messagebox.showinfo("Success", f"Document created with ID: {document_id}")
                 new_window.destroy()
@@ -96,59 +124,46 @@ class MongoDBApp:
             messagebox.showerror("Error", str(e))
 
     def update_document(self, collection):
-        new_window = tk.Toplevel(self.root)
-        new_window.title("Update Document")
-
-        ttk.Label(new_window, text="Enter Query Field:").pack(pady=5)
-        query_field = ttk.Entry(new_window)
-        query_field.pack(pady=5)
-
-        ttk.Label(new_window, text="Enter Query Value:").pack(pady=5)
-        query_value = ttk.Entry(new_window)
-        query_value.pack(pady=5)
-
-        ttk.Label(new_window, text="Enter Field to Update:").pack(pady=5)
-        update_field = ttk.Entry(new_window)
-        update_field.pack(pady=5)
-
-        ttk.Label(new_window, text="Enter New Value:").pack(pady=5)
-        new_value = ttk.Entry(new_window)
-        new_value.pack(pady=5)
-
-        def submit():
-            query = {query_field.get(): query_value.get()}
-            update_data = {update_field.get(): new_value.get()}
-            try:
-                updated_count = db_handler.update(collection, query, update_data)
-                messagebox.showinfo("Success", f"Number of documents updated: {updated_count}")
-                new_window.destroy()
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-
-        ttk.Button(new_window, text="Submit", command=submit).pack(pady=10)
+        # Implement update functionality here
+        pass
 
     def delete_document(self, collection):
         new_window = tk.Toplevel(self.root)
         new_window.title("Delete Document")
+        new_window.configure(bg="#2c3e50")
 
-        ttk.Label(new_window, text="Enter Query Field:").pack(pady=5)
-        query_field = ttk.Entry(new_window)
-        query_field.pack(pady=5)
+        try:
+            documents = db_handler.read(collection, {})
+            document_names = [doc.get('name', str(doc['_id'])) for doc in documents]
 
-        ttk.Label(new_window, text="Enter Query Value:").pack(pady=5)
-        query_value = ttk.Entry(new_window)
-        query_value.pack(pady=5)
-
-        def submit():
-            query = {query_field.get(): query_value.get()}
-            try:
-                deleted_count = db_handler.delete(collection, query)
-                messagebox.showinfo("Success", f"Number of documents deleted: {deleted_count}")
+            if not document_names:
+                messagebox.showinfo("No Data", "No documents found in this collection.")
                 new_window.destroy()
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+                return
 
-        ttk.Button(new_window, text="Submit", command=submit).pack(pady=10)
+            ttk.Label(new_window, text="Select Document to Delete:", background="#2c3e50", foreground="white").pack(pady=5)
+            self.document_var = tk.StringVar()
+            self.document_dropdown = ttk.Combobox(new_window, textvariable=self.document_var, values=document_names)
+            self.document_dropdown.pack(pady=5, padx=10)
+
+            def submit():
+                selected_document_name = self.document_var.get()
+
+                if not selected_document_name:
+                    messagebox.showwarning("Selection Error", "Please select a document to delete.")
+                    return
+
+                query = {'name': selected_document_name} if 'name' in documents[0] else {'_id': selected_document_name}
+                try:
+                    deleted_count = db_handler.delete(collection, query)
+                    messagebox.showinfo("Success", f"Number of documents deleted: {deleted_count}")
+                    new_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Error", str(e))
+
+            ttk.Button(new_window, text="Delete", command=submit).pack(pady=10)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def get_fields_by_collection(self, collection):
         fields = {
